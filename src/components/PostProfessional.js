@@ -6,11 +6,19 @@ import logo from '../../assets/Smooth.png';
 
 export default function Login({ changeStatus }) {
   const [type, setType] = useState("login");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
-  const [focusedField, setFocusedField] = useState(null);
+  const [name, setName] = useState("");
+  const ProductType = [
+    { id: 'camiseta', nome: 'Camiseta', icone: 'tshirt-crew' },
+    { id: 'calca', nome: 'Calça', icone: 'seat-legroom-normal' },
+    { id: 'calcado', nome: 'Calçado', icone: 'shoe-sneaker' },
+    { id: 'acessorio', nome: 'Acessório', icone: 'watch' },
+    { id: 'outro', nome: 'Outro', icone: 'package-variant-closed' }
+  ];
+  const [color, setColor] = useState("");
+  const [price, setPrice] = useState("");
+  const [characteristics, setcharacteristics] = useState("");
+
+
 
   function validateEmail(email) {
     if (!email.includes('@')) {
@@ -94,29 +102,28 @@ export default function Login({ changeStatus }) {
 
   return (
     <View style={styles.container}>
-      <Image style={styles.logo} source={logo} />
       <Card style={styles.card}>
         <Card.Content>
           <TextInput
             style={styles.input}
             mode="outlined"
-            label="E-mail"
-            value={email}
+            label="Nome"
+            value={name}
             onChangeText={(text) => {
-              setEmail(text);
-              setEmailError("");
+              setName(text);
+              setNameError("");
             }}
-            onFocus={() => setFocusedField("email")}
+            onFocus={() => setFocusedField("name")}
             onBlur={() => setFocusedField(null)}
             theme={{
               colors: {
-                primary: focusedField === "email" ? "black" : "#4682B4",
-                text: focusedField === "email" ? "black" : "gray",
+                primary: focusedField === "name" ? "black" : "#4682B4",
+                text: focusedField === "name" ? "black" : "gray",
               },
             }}
-            error={!!emailError}
+            error={!!nameError}
           />
-          {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
+          {nameError ? <Text style={styles.errorText}>{nameError}</Text> : null}
 
           <TextInput
             style={styles.input}

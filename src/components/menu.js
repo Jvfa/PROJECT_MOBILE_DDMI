@@ -3,7 +3,8 @@ import { Text, View, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/FontAwesome';
- 
+import PostProfessional from PostProfessional; 
+
 function HomeScreen() {
     return (
         <View style={styles.container}>
@@ -31,9 +32,7 @@ function ListScreen() {
  
 function PostProfessional() {
     return (
-        <View style={styles.container}>
-            <Text></Text>
-        </View>
+        <PostProfessional/>
     );
 }
  
@@ -76,7 +75,7 @@ export default function Menu() {
                         }
                         return <Icon name={iconName} size={size} color={color} />;
                     },
-                tabBarActiveTintColor: '#006400',
+                tabBarActiveTintColor: '#000000',
                 tabBarInactiveTintColor: '#C0C0C0',
                 showLabel: true,
                 })}
