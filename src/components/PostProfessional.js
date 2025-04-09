@@ -1,226 +1,228 @@
-import { View, StyleSheet, Image, TouchableOpacity } from "react-native";
-import { Card, Text, TextInput } from "react-native-paper";
+import { View, StyleSheet, TouchableOpacity, ScrollView, Alert } from "react-native";
+import { Card, Text, TextInput, Button, Menu, Provider } from "react-native-paper";
 import React, { useState } from "react";
-import firebase from '../services/connectionFirebase';
-import logo from '../../assets/Smooth.png';
 
-export default function Login({ changeStatus }) {
-  const [type, setType] = useState("login");
-  const [name, setName] = useState("");
-  const ProductType = [
-    { id: 'camiseta', nome: 'Camiseta', icone: 'tshirt-crew' },
-    { id: 'calca', nome: 'Calça', icone: 'seat-legroom-normal' },
-    { id: 'calcado', nome: 'Calçado', icone: 'shoe-sneaker' },
-    { id: 'acessorio', nome: 'Acessório', icone: 'watch' },
-    { id: 'outro', nome: 'Outro', icone: 'package-variant-closed' }
-  ];
-  const [color, setColor] = useState("");
-  const [price, setPrice] = useState("");
-  const [characteristics, setcharacteristics] = useState("");
+export default function PostProfessional({ changeStatus }) {
+  const [nome, setNome] = useState('');
+  const [tipo, setTipo] = useState('');
+  const [cor, setCor] = useState('');
+  const [preco, setPreco] = useState('');
+  const [caracteristicas, setCaracteristicas] = useState('');
+  const [visibleMenu, setVisibleMenu] = useState(false);
+  const [visibleColorMenu, setVisibleColorMenu] = useState(false);
+  const [errors, setErrors] = useState({});
 
+  const produtoTipos = ['Calça', 'Camiseta', 'Camisa', 'Acessórios', 'Sapato', 'Outros'];
+  const produtoCores = ['Preto', 'Branco', 'Azul', 'Vermelho', 'Verde', 'Amarelo', 'Roxo', 'Rosa', 'Marrom', 'Cinza', 'Laranja', 'Bege'];
 
+  const validateFields = () => {
+    let tempErrors = {};
+    
+    if (nome === '') tempErrors.nome = 'Nome do produto é obrigatório';
+    if (tipo === '') tempErrors.tipo = 'Tipo do produto é obrigatório';
+    if (cor === '') tempErrors.cor = 'Cor do produto é obrigatória';
+    if (preco === '') tempErrors.preco = 'Preço do produto é obrigatório';
+    
+    setErrors(tempErrors);
+    return Object.keys(tempErrors).length === 0;
+  };
 
-  function validateEmail(email) {
-    if (!email.includes('@')) {
-      setEmailError("Falta @ no email");
-      return false;
-    }
-    if (!email.includes('.com')) {
-      setEmailError("Falta .com no email");
-      return false;
-    }
-    if (email !== email.toLowerCase()) {
-      setEmailError("Email deve conter apenas letras minúsculas");
-      return false;
-    }
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(String(email).toLowerCase());
-  }
-
-  function validatePassword(password) {
-    const specialChars = /[!@#$%^&*(),.?":{}|<>]/;
-    const upperCase = /[A-Z]/;
-    const lowerCase = /[a-z]/;
-    const numbers = /[0-9]/;
-
-    if (!specialChars.test(password)) {
-      setPasswordError("A senha deve conter pelo menos um caractere especial");
-      return false;
-    }
-    if (!upperCase.test(password)) {
-      setPasswordError("A senha deve conter pelo menos uma letra maiúscula");
-      return false;
-    }
-    if (!lowerCase.test(password)) {
-      setPasswordError("A senha deve conter pelo menos uma letra minúscula");
-      return false;
-    }
-    if (!numbers.test(password)) {
-      setPasswordError("A senha deve conter pelo menos um número");
-      return false;
-    }
-    if (password.length < 6) {
-      setPasswordError("A senha deve ter pelo menos 6 caracteres");
-      return false;
-    }
-    return true;
-  }
-
-  function handleLogin() {
-    if (!validateEmail(email)) {
+  // Price mask function to only allow numbers and format as currency
+  const handlePriceChange = (text) => {
+    // Remove any non-numeric characters
+    const numericValue = text.replace(/[^0-9]/g, '');
+    
+    if (numericValue === '') {
+      setPreco('');
       return;
     }
+    
+    // Convert to decimal value (divide by 100 to handle cents)
+    const decimalValue = (parseInt(numericValue) / 100).toFixed(2);
+    
+    // Format as currency
+    setPreco(decimalValue.replace('.', ','));
+  };
 
-    if (!validatePassword(password)) {
-      return;
-    }
-
-    if (type === 'login') {
-      firebase.auth().signInWithEmailAndPassword(email, password)
-        .then((user) => {
-          changeStatus(user.user.uid);
-        })
-        .catch((err) => {
-          console.log(err);
-          if (err.code === 'auth/user-not-found') {
-            setEmailError("Email não cadastrado");
-          } else {
-            alert('Email ou senha incorretos!');
-          }
-        });
+  const cadastrarProduto = () => {
+    if (validateFields()) {
+      // Mock successful product registration without Firebase
+      Alert.alert('Sucesso', 'Produto cadastrado com sucesso!');
+      limparCampos();
     } else {
-      firebase.auth().createUserWithEmailAndPassword(email, password)
-        .then((user) => {
-          changeStatus(user.user.uid);
-        })
-        .catch((err) => {
-          console.log(err);
-          alert('Erro ao Cadastrar!');
-        });
+      Alert.alert('Erro', 'Por favor, preencha todos os campos obrigatórios');
     }
-  }
+  };
+
+  const limparCampos = () => {
+    setNome('');
+    setTipo('');
+    setCor('');
+    setPreco('');
+    setCaracteristicas('');
+    setErrors({});
+  };
 
   return (
-    <View style={styles.container}>
-      <Card style={styles.card}>
-        <Card.Content>
-          <TextInput
-            style={styles.input}
-            mode="outlined"
-            label="Nome"
-            value={name}
-            onChangeText={(text) => {
-              setName(text);
-              setNameError("");
-            }}
-            onFocus={() => setFocusedField("name")}
-            onBlur={() => setFocusedField(null)}
-            theme={{
-              colors: {
-                primary: focusedField === "name" ? "black" : "#4682B4",
-                text: focusedField === "name" ? "black" : "gray",
-              },
-            }}
-            error={!!nameError}
-          />
-          {nameError ? <Text style={styles.errorText}>{nameError}</Text> : null}
+    <Provider>
+      <ScrollView>
+        <View style={styles.container}>
+          <Card style={styles.card}>
+            <Card.Title 
+              title="Profissional" 
+              titleStyle={styles.cardTitle} 
+            />
+            <Card.Content>
+              <Text style={styles.title}>Cadastrar Produto</Text>
 
-          <TextInput
-            style={styles.input}
-            mode="outlined"
-            label="Senha"
-            secureTextEntry
-            maxLength={30}
-            value={password}
-            onChangeText={(text) => {
-              setPassword(text);
-              setPasswordError("");
-            }}
-            onFocus={() => setFocusedField("password")}
-            onBlur={() => setFocusedField(null)}
-            theme={{
-              colors: {
-                primary: focusedField === "password" ? "black" : "#4682B4",
-                text: focusedField === "password" ? "black" : "gray",
-              },
-            }}
-          />
-          {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
-        </Card.Content>
-      </Card>
+              <TextInput
+                label="Nome do produto"
+                value={nome}
+                onChangeText={text => setNome(text)}
+                mode="outlined"
+                style={styles.input}
+                error={errors.nome ? true : false}
+              />
+              {errors.nome && <Text style={styles.errorText}>{errors.nome}</Text>}
 
-      <TouchableOpacity
-        style={[
-          styles.colorButton,
-          { backgroundColor: type === 'login' ? '#000000' : '#FF0000' },
-        ]}
-        onPress={handleLogin}
-      >
-        <Text style={styles.loginText}>
-          {type === 'login' ? 'Acessar' : 'Cadastrar'}
-        </Text>
-      </TouchableOpacity>
+              <Menu
+                visible={visibleMenu}
+                onDismiss={() => setVisibleMenu(false)}
+                anchor={
+                  <TouchableOpacity onPress={() => setVisibleMenu(true)}>
+                    <View style={styles.dropdownStyle}>
+                      <Text style={tipo ? styles.dropdownText : styles.placeholder}>
+                        {tipo || "Tipo do produto"}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                }
+              >
+                {produtoTipos.map((item) => (
+                  <Menu.Item 
+                    key={item} 
+                    onPress={() => {
+                      setTipo(item);
+                      setVisibleMenu(false);
+                    }} 
+                    title={item} 
+                  />
+                ))}
+              </Menu>
+              {errors.tipo && <Text style={styles.errorText}>{errors.tipo}</Text>}
 
-      <TouchableOpacity
-        onPress={() => setType((type) => (type === 'login' ? 'cadastrar' : 'login'))}
-      >
-        <Text style={styles.switchText}>
-          {type === 'login' ? 'Criar uma conta' : 'Já possuo uma conta'}
-        </Text>
-      </TouchableOpacity>
-    </View>
+              {/* Color dropdown menu */}
+              <Menu
+                visible={visibleColorMenu}
+                onDismiss={() => setVisibleColorMenu(false)}
+                anchor={
+                  <TouchableOpacity onPress={() => setVisibleColorMenu(true)}>
+                    <View style={styles.dropdownStyle}>
+                      <Text style={cor ? styles.dropdownText : styles.placeholder}>
+                        {cor || "Cor do produto"}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                }
+              >
+                {produtoCores.map((item) => (
+                  <Menu.Item 
+                    key={item} 
+                    onPress={() => {
+                      setCor(item);
+                      setVisibleColorMenu(false);
+                    }} 
+                    title={item} 
+                  />
+                ))}
+              </Menu>
+              {errors.cor && <Text style={styles.errorText}>{errors.cor}</Text>}
+
+              <TextInput
+                label="Preço do produto"
+                value={preco}
+                onChangeText={handlePriceChange}
+                mode="outlined"
+                style={styles.input}
+                keyboardType="numeric"
+                error={errors.preco ? true : false}
+                placeholder="0,00"
+              />
+              {errors.preco && <Text style={styles.errorText}>{errors.preco}</Text>}
+
+              <TextInput
+                label="Características do produto (opcional)"
+                value={caracteristicas}
+                onChangeText={text => setCaracteristicas(text)}
+                mode="outlined"
+                style={styles.input}
+                multiline
+                numberOfLines={3}
+              />
+
+              <Button 
+                mode="contained" 
+                style={styles.button}
+                onPress={cadastrarProduto}
+              >
+                CADASTRAR PRODUTO
+              </Button>
+            </Card.Content>
+          </Card>
+        </View>
+      </ScrollView>
+    </Provider>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 20,
-  },
-  logo: {
-    width: 200,
-    height: 250,
-    marginBottom: 20,
+    backgroundColor: '#f2f2f2',
   },
   card: {
-    width: "100%",
-    maxWidth: 400,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: 15,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
+    margin: 16,
+    elevation: 4,
+    backgroundColor: 'white',
+  },
+  cardTitle: {
+    fontWeight: 'bold',
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 16,
   },
   input: {
+    marginBottom: 12,
+    backgroundColor: 'white',
+  },
+  dropdownStyle: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 4,
+    padding: 15,
+    marginBottom: 12,
+    backgroundColor: 'white',
+  },
+  dropdownText: {
+    fontSize: 16,
+    color: '#000',
+  },
+  placeholder: {
+    fontSize: 16,
+    color: '#757575',
+  },
+  button: {
+    marginTop: 20,
     marginBottom: 10,
+    paddingVertical: 8,
+    backgroundColor: '#000000',
   },
   errorText: {
-    color: "red",
-    fontSize: 14,
-  },
-  colorButton: {
-    width: "100%",
-    maxWidth: 400,
-    marginTop: 15,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  loginText: {
-    color: "#FFF",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  switchText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: "#4682B4",
-    fontWeight: "bold",
-  },
+    color: 'red',
+    fontSize: 12,
+    marginTop: -8,
+    marginBottom: 8,
+  }
 });

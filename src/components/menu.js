@@ -3,7 +3,7 @@ import { Text, View, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import PostProfessional from PostProfessional; 
+import PostProfessional from "./PostProfessional"; 
 
 function HomeScreen() {
     return (
@@ -30,10 +30,8 @@ function ListScreen() {
     );
 }
  
-function PostProfessional() {
-    return (
-        <PostProfessional/>
-    );
+function Profissional() {
+    return <PostProfessional/>
 }
  
 function APIScreen() {
@@ -82,15 +80,8 @@ export default function Menu() {
             >
                 <Tab.Screen name="Home" component={HomeScreen} />
                 <Tab.Screen name="Listar" component={ListScreen} />
-                <Tab.Screen
-                    name="Profissional"
-                    component={PostProfessional}
-
-                />
-                <Tab.Screen
-                    name="Tarefa"
-                    component={PostScreen}
-                />
+                <Tab.Screen name="Profissional" component={Profissional} />
+                <Tab.Screen name="Tarefa" component={PostScreen}/>
                 <Tab.Screen name="Ler API" component={APIScreen} />
             </Tab.Navigator>
         </NavigationContainer>
