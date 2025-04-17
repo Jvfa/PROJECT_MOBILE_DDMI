@@ -10,7 +10,8 @@ let firebaseConfig = {
   storageBucket: "appprimeiro-504b8.firebasestorage.app",
   messagingSenderId: "780413081160",
   appId: "1:780413081160:web:ce401a8da804b7c2262a7d",
-  measurementId: "G-N0ST4Y97MH"
+  measurementId: "G-N0ST4Y97MH",
+  baseURL: "https://appprimeiro-504b8-default-rtdb.firebaseio.com/"
 };
 
 // Initialize Firebase
