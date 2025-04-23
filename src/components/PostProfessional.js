@@ -1,7 +1,8 @@
-import { View, StyleSheet, TouchableOpacity, ScrollView, Alert, Keyboard } from "react-native";
+import { View, StyleSheet, TouchableOpacity, ScrollView, Alert, Keyboard, ActivityIndicator, FlatList } from "react-native";
 import { Card, Text, TextInput, Button, Menu, Provider } from "react-native-paper";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import firebase from '../services/connectionFirebase';
+import ListProdutos from "./listProdutos";
 
 export default function PostProfessional({ changeStatus }) {
   const [nome, setNome] = useState('');
@@ -13,9 +14,10 @@ export default function PostProfessional({ changeStatus }) {
   const [visibleMenu, setVisibleMenu] = useState(false);
   const [visibleColorMenu, setVisibleColorMenu] = useState(false);
   const [errors, setErrors] = useState({});
+  //array dos dados a serem listados
+  const [loading, setLoading] = useState(true);
+  const [produtoA, setprodutoA] = useState([]);
 
-  const tipoAnchorRef = useRef(null);
-  const corAnchorRef = useRef(null);
 
   const produtoTipos = ['Calça', 'Camiseta', 'Camisa', 'Acessórios', 'Sapato', 'Outros'];
   const produtoCores = ['Preto', 'Branco', 'Azul', 'Vermelho', 'Verde', 'Amarelo', 'Roxo', 'Rosa', 'Marrom', 'Cinza', 'Laranja', 'Bege'];
@@ -50,7 +52,7 @@ export default function PostProfessional({ changeStatus }) {
       Alert.alert('Erro', 'Por favor, preencha todos os campos obrigatórios');
       return;
     }
-    
+
     // Se tiver uma key, é uma edição
     if (key !== '') {
       firebase.database().ref('products').child(key).update({
@@ -68,10 +70,10 @@ export default function PostProfessional({ changeStatus }) {
     }
 
     // Caso contrário é um novo cadastro
-    let gelatosA = await firebase.database().ref('products');
-    let chave = gelatosA.push().key;
+    let produtoA = await firebase.database().ref('products');
+    let chave = produtoA.push().key;
 
-    gelatosA.child(chave).set({
+    produtoA.child(chave).set({
       name: nome,
       type: tipo,
       color: cor,
@@ -91,6 +93,30 @@ export default function PostProfessional({ changeStatus }) {
     setCaracteristicas('');
     setErrors({});
   }
+
+  useEffect(() => {
+
+    async function dados() {
+
+      await firebase.database().ref('products').on('value', (snapshot) => {
+        setProdutoA([]);
+
+        snapshot.forEach((chilItem) => {
+          let data = {
+            key: chilItem.key,
+            nome: chilItem.val().name,
+            tipo: chilItem.val().type,
+            cor: chilItem.val().color,
+            preco: chilItem.val().price,
+            caracteristicas: chilItem.val().characteristics,
+          };
+          setProdutoA(oldArray => [...oldArray, data].reverse());
+        })
+        setLoading(false);
+      })
+    }
+    dados();
+  }, []);
 
   return (
     <Provider>
@@ -197,6 +223,21 @@ export default function PostProfessional({ changeStatus }) {
               >
                 CADASTRAR PRODUTO
               </Button>
+              {loading ?
+                (
+                  <ActivityIndicator color="#141414" size={45} />
+                ) :
+                (
+                  <FlatList
+                    keyExtractor={item => item.key}
+                    data={produtoA}
+                    renderItem={({ item }) => (
+                      <ListProdutos data={item} deleteItem={'handleDelete'}
+                        editItem={'handleEdit'} />
+                    )}
+                  />
+                )
+              }
             </Card.Content>
           </Card>
         </View>
