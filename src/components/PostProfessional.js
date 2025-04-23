@@ -5,31 +5,31 @@ import firebase from '../services/connectionFirebase';
 import ListProdutos from "./listProdutos";
 
 export default function PostProfessional({ changeStatus }) {
-  const [nome, setNome] = useState('');
-  const [tipo, setTipo] = useState('camisa');
-  const [cor, setCor] = useState('preto');
-  const [preco, setPreco] = useState('');
-  const [caracteristicas, setCaracteristicas] = useState('');
+  const [name, setName] = useState('');
+  const [type, setType] = useState('camisa');
+  const [color, setColor] = useState('preto');
+  const [price, setPrice] = useState('');
+  const [characteristics, setCharacteristics] = useState('');
   const [key, setKey] = useState('');
   const [visibleMenu, setVisibleMenu] = useState(false);
   const [visibleColorMenu, setVisibleColorMenu] = useState(false);
   const [errors, setErrors] = useState({});
   //array dos dados a serem listados
   const [loading, setLoading] = useState(true);
-  const [produtoA, setprodutoA] = useState([]);
+  const [produtoA, setProdutoA] = useState([]);
 
 
-  const produtoTipos = ['Calça', 'Camiseta', 'Camisa', 'Acessórios', 'Sapato', 'Outros'];
-  const produtoCores = ['Preto', 'Branco', 'Azul', 'Vermelho', 'Verde', 'Amarelo', 'Roxo', 'Rosa', 'Marrom', 'Cinza', 'Laranja', 'Bege'];
+  const produtotypes = ['Calça', 'Camiseta', 'Camisa', 'Acessórios', 'Sapato', 'Outros'];
+  const produtocolores = ['Preto', 'Branco', 'Azul', 'Vermelho', 'Verde', 'Amarelo', 'Roxo', 'Rosa', 'Marrom', 'Cinza', 'Laranja', 'Bege'];
 
   const validateFields = () => {
     let tempErrors = {};
 
-    if (nome === '') tempErrors.nome = 'Nome do produto é obrigatório';
-    if (tipo === '') tempErrors.tipo = 'Tipo do produto é obrigatório';
-    if (cor === '') tempErrors.cor = 'Cor do produto é obrigatória';
-    if (preco === '') tempErrors.preco = 'Preço do produto é obrigatório';
-    if (caracteristicas === '') tempErrors.caracteristicas = 'Características do produto são obrigatórias';
+    if (name === '') tempErrors.name = 'name do produto é obrigatório';
+    if (type === '') tempErrors.type = 'type do produto é obrigatório';
+    if (color === '') tempErrors.color = 'color do produto é obrigatória';
+    if (price === '') tempErrors.price = 'Preço do produto é obrigatório';
+    if (characteristics === '') tempErrors.characteristics = 'Características do produto são obrigatórias';
 
     setErrors(tempErrors);
     return Object.keys(tempErrors).length === 0;
@@ -39,12 +39,12 @@ export default function PostProfessional({ changeStatus }) {
     const numericValue = text.replace(/[^0-9]/g, '');
 
     if (numericValue === '') {
-      setPreco('');
+      setPrice('');
       return;
     }
 
     const decimalValue = (parseInt(numericValue) / 100).toFixed(2);
-    setPreco(decimalValue.replace('.', ','));
+    setPrice(decimalValue.replace('.', ','));
   };
 
   async function insert() {
@@ -56,11 +56,11 @@ export default function PostProfessional({ changeStatus }) {
     // Se tiver uma key, é uma edição
     if (key !== '') {
       firebase.database().ref('products').child(key).update({
-        name: nome,
-        type: tipo,
-        color: cor,
-        price: preco,
-        characteristics: caracteristicas
+        name: name,
+        type: type,
+        color: color,
+        price: price,
+        characteristics: characteristics
       });
       Keyboard.dismiss();
       alert('Produto Editado!');
@@ -74,11 +74,11 @@ export default function PostProfessional({ changeStatus }) {
     let chave = produtoA.push().key;
 
     produtoA.child(chave).set({
-      name: nome,
-      type: tipo,
-      color: cor,
-      price: preco,
-      characteristics: caracteristicas
+      name: name,
+      type: type,
+      color: color,
+      price: price,
+      characteristics: characteristics
     });
     Keyboard.dismiss();
     alert('Produto Cadastrado!');
@@ -86,11 +86,11 @@ export default function PostProfessional({ changeStatus }) {
   }
 
   function clearFields() {
-    setNome('');
-    setTipo('');
-    setCor('');
-    setPreco('');
-    setCaracteristicas('');
+    setName('');
+    setType('');
+    setColor('');
+    setPrice('');
+    setCharacteristics('');
     setErrors({});
   }
 
@@ -104,11 +104,11 @@ export default function PostProfessional({ changeStatus }) {
         snapshot.forEach((chilItem) => {
           let data = {
             key: chilItem.key,
-            nome: chilItem.val().name,
-            tipo: chilItem.val().type,
-            cor: chilItem.val().color,
-            preco: chilItem.val().price,
-            caracteristicas: chilItem.val().characteristics,
+            name: chilItem.val().name,
+            type: chilItem.val().type,
+            color: chilItem.val().color,
+            price: chilItem.val().price,
+            characteristics: chilItem.val().characteristics,
           };
           setProdutoA(oldArray => [...oldArray, data].reverse());
         })
@@ -129,91 +129,91 @@ export default function PostProfessional({ changeStatus }) {
 
               <TextInput
                 label="Nome do produto"
-                value={nome}
-                onChangeText={text => setNome(text)}
+                value={name}
+                onChangeText={text => setName(text)}
                 mode="outlined"
                 style={styles.input}
-                error={!!errors.nome}
+                error={!!errors.name}
                 theme={{ colors: { primary: '#000', text: '#000', placeholder: '#000' } }}
                 outlineColor="#999"
               />
-              {errors.nome && <Text style={styles.errorText}>{errors.nome}</Text>}
+              {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
 
               <Menu
                 visible={visibleMenu}
                 onDismiss={() => setVisibleMenu(false)}
                 anchor={
                   <TouchableOpacity onPress={() => setVisibleMenu(true)} style={styles.dropdownStyle}>
-                    <Text style={tipo ? styles.dropdownText : styles.placeholder}>
-                      {tipo || "Tipo do produto"}
+                    <Text style={type ? styles.dropdownText : styles.placeholder}>
+                      {type || "Tipo do produto"}
                     </Text>
                   </TouchableOpacity>
                 }
               >
-                {produtoTipos.map((item) => (
+                {produtotypes.map((item) => (
                   <Menu.Item
                     key={item}
                     onPress={() => {
-                      setTipo(item);
+                      setType(item);
                       setVisibleMenu(false);
                     }}
                     title={item}
                   />
                 ))}
               </Menu>
-              {errors.tipo && <Text style={styles.errorText}>{errors.tipo}</Text>}
+              {errors.type && <Text style={styles.errorText}>{errors.type}</Text>}
 
               <Menu
                 visible={visibleColorMenu}
                 onDismiss={() => setVisibleColorMenu(false)}
                 anchor={
                   <TouchableOpacity onPress={() => setVisibleColorMenu(true)} style={styles.dropdownStyle}>
-                    <Text style={cor ? styles.dropdownText : styles.placeholder}>
-                      {cor || "Cor do produto"}
+                    <Text style={color ? styles.dropdownText : styles.placeholder}>
+                      {color || "Cor do produto"}
                     </Text>
                   </TouchableOpacity>
                 }
               >
-                {produtoCores.map((item) => (
+                {produtocolores.map((item) => (
                   <Menu.Item
                     key={item}
                     onPress={() => {
-                      setCor(item);
+                      setColor(item);
                       setVisibleColorMenu(false);
                     }}
                     title={item}
                   />
                 ))}
               </Menu>
-              {errors.cor && <Text style={styles.errorText}>{errors.cor}</Text>}
+              {errors.color && <Text style={styles.errorText}>{errors.color}</Text>}
 
               <TextInput
                 label="Preço do produto"
-                value={preco}
+                value={price}
                 onChangeText={handlePriceChange}
                 mode="outlined"
                 style={styles.input}
                 keyboardType="numeric"
-                error={!!errors.preco}
+                error={!!errors.price}
                 placeholder="0,00"
                 theme={{ colors: { primary: '#000', text: '#000', placeholder: '#000' } }}
                 outlineColor="#999"
               />
-              {errors.preco && <Text style={styles.errorText}>{errors.preco}</Text>}
+              {errors.price && <Text style={styles.errorText}>{errors.price}</Text>}
 
               <TextInput
                 label="Características do produto"
-                value={caracteristicas}
-                onChangeText={text => setCaracteristicas(text)}
+                value={characteristics}
+                onChangeText={text => setCharacteristics(text)}
                 mode="outlined"
                 style={styles.input}
                 multiline
                 numberOfLines={3}
                 theme={{ colors: { primary: '#000', text: '#000', placeholder: '#000' } }}
                 outlineColor="#999"
-                error={!!errors.caracteristicas}
+                error={!!errors.characteristics}
               />
-              {errors.caracteristicas && <Text style={styles.errorText}>{errors.caracteristicas}</Text>}
+              {errors.characteristics && <Text style={styles.errorText}>{errors.characteristics}</Text>}
 
               <Button
                 mode="contained"

@@ -4,11 +4,11 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 export default function ListProdutos({ data, deleteItem, editItem }) {
     return (
 <View style={styles.container}>
-<Text style={styles.text}>Nome: {data.nome}</Text>
-<Text style={styles.text}>Tipo {data.tipo}</Text>
-<Text style={styles.text}>Cor: {data.cor}</Text>
-<Text style={styles.text}>Preço(R$): {data.preco}</Text>
-<Text style={styles.text}>caracteristicas: {data.caracteristicas}</Text>
+<Text style={styles.text}>Nome: {data.name}</Text>
+<Text style={styles.text}>Tipo {data.type}</Text>
+<Text style={styles.text}>Cor: {data.color}</Text>
+<Text style={styles.text}>Preço(R$): {data.price}</Text>
+<Text style={styles.text}>caracteristicas: {data.characteristics}</Text>
 <View style={styles.item}>
 <TouchableOpacity onPress={() => editItem(data)}>
 <Icon name="pencil" color="blue" size={20}>Editar</Icon>
