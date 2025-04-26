@@ -6,8 +6,8 @@ import ListProdutos from "./listProdutos";
 
 export default function PostProfessional({ changeStatus }) {
   const [name, setName] = useState('');
-  const [type, setType] = useState('camisa');
-  const [color, setColor] = useState('preto');
+  const [type, setType] = useState('Camisa');
+  const [color, setColor] = useState('Preto');
   const [price, setPrice] = useState('');
   const [characteristics, setCharacteristics] = useState('');
   const [key, setKey] = useState('');
@@ -17,6 +17,7 @@ export default function PostProfessional({ changeStatus }) {
   //array dos dados a serem listados
   const [loading, setLoading] = useState(true);
   const [produtoA, setProdutoA] = useState([]);
+  const inputRef = useRef(null);
 
 
   const produtotypes = ['Calça', 'Camiseta', 'Camisa', 'Acessórios', 'Sapato', 'Outros'];
@@ -94,6 +95,24 @@ export default function PostProfessional({ changeStatus }) {
     setErrors({});
   }
 
+  function handleEdit(data){
+    setKey(data.key);
+    setName(data.name);
+    setType(data.type);
+    setColor(data.color);
+    setPrice(data.price);
+    setCharacteristics(data.characteristics);
+  }
+
+  function handleDelete(key) {
+    firebase.database().ref('products').child(key).remove()
+      .then(() => {
+        const findProducts = products.filter(item => item.key !== key)
+        setGelatos(findProducts)
+      })
+    alert('Produto Excluído!');
+  }
+
   useEffect(() => {
 
     async function dados() {
@@ -136,6 +155,7 @@ export default function PostProfessional({ changeStatus }) {
                 error={!!errors.name}
                 theme={{ colors: { primary: '#000', text: '#000', placeholder: '#000' } }}
                 outlineColor="#999"
+                ref={inputRef}
               />
               {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
 
@@ -198,6 +218,7 @@ export default function PostProfessional({ changeStatus }) {
                 placeholder="0,00"
                 theme={{ colors: { primary: '#000', text: '#000', placeholder: '#000' } }}
                 outlineColor="#999"
+                ref={inputRef}
               />
               {errors.price && <Text style={styles.errorText}>{errors.price}</Text>}
 
@@ -212,6 +233,7 @@ export default function PostProfessional({ changeStatus }) {
                 theme={{ colors: { primary: '#000', text: '#000', placeholder: '#000' } }}
                 outlineColor="#999"
                 error={!!errors.characteristics}
+                ref={inputRef}
               />
               {errors.characteristics && <Text style={styles.errorText}>{errors.characteristics}</Text>}
 
@@ -232,8 +254,8 @@ export default function PostProfessional({ changeStatus }) {
                     keyExtractor={item => item.key}
                     data={produtoA}
                     renderItem={({ item }) => (
-                      <ListProdutos data={item} deleteItem={'handleDelete'}
-                        editItem={'handleEdit'} />
+                      <ListProdutos data={item} deleteItem={handleDelete}
+                        editItem={handleEdit} />
                     )}
                   />
                 )

@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { FontAwesome } from '@expo/vector-icons';
  
 export default function ListProdutos({ data, deleteItem, editItem }) {
     return (
