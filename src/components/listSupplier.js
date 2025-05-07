@@ -1,20 +1,29 @@
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { FontAwesome } from '@expo/vector-icons';
 
 export default function ListSuppliers({ data, deleteItem, editItem }) {
     return (
-        <View style={styles.container}>
-            <Text style={styles.text}>Razão Social: {data.corporateName}</Text>
-            <Text style={styles.text}>CNPJ: {data.cnpj}</Text>
-            <Text style={styles.text}>E-mail: {data.email}</Text>
-            <Text style={styles.text}>Telefone: {data.phone}</Text>
-            <View style={styles.item}>
-                <TouchableOpacity onPress={() => editItem(data)}>
-                    <Icon name="pencil" color="blue" size={20}>Editar</Icon>
+        <View style={styles.card}>
+            <View style={styles.infoBlock}>
+                <Text style={styles.label}>Razão Social</Text>
+                <Text style={styles.text}>{data.corporateName}</Text>
+
+                <Text style={styles.label}>CNPJ</Text>
+                <Text style={styles.text}>{data.cnpj}</Text>
+
+                <Text style={styles.label}>E-mail</Text>
+                <Text style={styles.text}>{data.email}</Text>
+
+                <Text style={styles.label}>Telefone</Text>
+                <Text style={styles.text}>{data.phone}</Text>
+            </View>
+
+            <View style={styles.actions}>
+                <TouchableOpacity onPress={() => editItem(data)} style={styles.iconButton}>
+                    <Icon name="pencil" color="#007AFF" size={18} />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => deleteItem(data.key)}>
-                    <Icon name="trash-o" color="#A52A2A" size={20}>Excluir</Icon>
+                <TouchableOpacity onPress={() => deleteItem(data.key)} style={styles.iconButton}>
+                    <Icon name="trash-o" color="#FF3B30" size={18} />
                 </TouchableOpacity>
             </View>
         </View>
@@ -22,27 +31,41 @@ export default function ListSuppliers({ data, deleteItem, editItem }) {
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        marginTop: 10,
-        marginBottom: 5,
+    card: {
+        backgroundColor: '#F7FAFC',
+        borderRadius: 16,
         padding: 20,
-        backgroundColor: '#D6E2E1',
-        paddingTop: 22,
-        borderWidth: 0.5,
-        borderColor: '#20232a',
-        fontWeight: 'bold'
+        marginVertical: 12,
+        marginHorizontal: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 4,
+        borderWidth: 1,
+        borderColor: '#E2E8F0',
+    },
+    infoBlock: {
+        marginBottom: 16,
+    },
+    label: {
+        fontSize: 13,
+        color: '#718096',
+        marginTop: 8,
     },
     text: {
-        color: 'black',
-        fontSize: 17
+        fontSize: 16,
+        color: '#2D3748',
+        fontWeight: '500',
     },
-    item: {
-        flex: 1,
+    actions: {
         flexDirection: 'row',
-        justifyContent: 'space-around',
+        justifyContent: 'flex-end',
+    },
+    iconButton: {
+        backgroundColor: '#EDF2F7',
         padding: 10,
-        fontSize: 18,
-        height: 20
-    }
+        borderRadius: 10,
+        marginLeft: 12,
+    },
 });
