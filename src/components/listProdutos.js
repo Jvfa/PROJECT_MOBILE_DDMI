@@ -1,7 +1,35 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 export default function ListProdutos({ data, deleteItem, editItem }) {
+    // Função para confirmar exclusão
+    const confirmDelete = (key) => {
+        // Para plataformas móveis usando React Native
+        if (Platform.OS === 'ios' || Platform.OS === 'android') {
+            Alert.alert(
+                'Confirmar exclusão',
+                'Deseja realmente excluir este registro?',
+                [
+                    {
+                        text: 'Cancelar',
+                        style: 'cancel',
+                    },
+                    {
+                        text: 'Excluir',
+                        onPress: () => deleteItem(key),
+                        style: 'destructive',
+                    },
+                ],
+                { cancelable: true }
+            );
+        } else {
+            // Para ambiente web
+            if (window.confirm('Deseja realmente excluir este registro?')) {
+                deleteItem(key);
+            }
+        }
+    };
+
     return (
         <View style={styles.card}>
             <View style={styles.infoBlock}>
@@ -25,7 +53,7 @@ export default function ListProdutos({ data, deleteItem, editItem }) {
                 <TouchableOpacity onPress={() => editItem(data)} style={styles.iconButton}>
                     <Icon name="pencil" color="#007AFF" size={18} />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => deleteItem(data.key)} style={styles.iconButton}>
+                <TouchableOpacity onPress={() => confirmDelete(data.key)} style={styles.iconButton}>
                     <Icon name="trash-o" color="#FF3B30" size={18} />
                 </TouchableOpacity>
             </View>

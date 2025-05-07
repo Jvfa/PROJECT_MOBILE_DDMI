@@ -26,7 +26,7 @@ export default function PostProdutos({ changeStatus }) {
   const validateFields = () => {
     let tempErrors = {};
 
-    if (name === '') tempErrors.name = 'name do produto é obrigatório';
+    if (name === '') tempErrors.name = 'nome do produto é obrigatório';
     if (type === '') tempErrors.type = 'type do produto é obrigatório';
     if (color === '') tempErrors.color = 'color do produto é obrigatória';
     if (price === '') tempErrors.price = 'Preço do produto é obrigatório';
