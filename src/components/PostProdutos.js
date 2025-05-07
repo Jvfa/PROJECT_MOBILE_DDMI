@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import firebase from '../services/connectionFirebase';
 import ListProdutos from "./listProdutos";
 
-export default function PostProfessional({ changeStatus }) {
+export default function PostProdutos({ changeStatus }) {
   const [name, setName] = useState('');
   const [type, setType] = useState('Camisa');
   const [color, setColor] = useState('Preto');
@@ -142,7 +142,6 @@ export default function PostProfessional({ changeStatus }) {
       <ScrollView>
         <View style={styles.container}>
           <Card style={styles.card}>
-            <Card.Title title="Profissional" titleStyle={styles.cardTitle} />
             <Card.Content>
               <Text style={styles.title}>Cadastrar Produto</Text>
 

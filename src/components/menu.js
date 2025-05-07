@@ -3,7 +3,8 @@ import { Text, View, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import PostProfessional from "./PostProfessional"; 
+import PostProdutos from "./PostProdutos";
+import PostSupplier from './PostSupplier'; 
 
 function HomeScreen() {
     return (
@@ -22,16 +23,12 @@ function ListScreen() {
     );
 }
  
- function PostScreen() {
-    return (
-        <View style={styles.container}>
-            <Text></Text>
-        </View>
-    );
+function Produtos() {
+    return <PostProdutos/>
 }
- 
-function Profissional() {
-    return <PostProfessional/>
+
+function Fornecedores() {
+    return <PostSupplier/>
 }
  
 function APIScreen() {
@@ -58,11 +55,11 @@ export default function Menu() {
                             case 'Listar':
                                 iconName = 'list';
                                 break;
-                            case 'Profissional':
-                                iconName = 'user-md';
+                            case 'Produtos':
+                                iconName = 'inbox';
                                 break;
-                            case 'Tarefa':
-                                iconName = 'list-alt';
+                            case 'Fornecedores':
+                                iconName = 'group';
                                 break;
                             case 'Ler API':
                                 iconName = 'android';
@@ -80,8 +77,8 @@ export default function Menu() {
             >
                 <Tab.Screen name="Home" component={HomeScreen} />
                 <Tab.Screen name="Listar" component={ListScreen} />
-                <Tab.Screen name="Profissional" component={Profissional} />
-                <Tab.Screen name="Tarefa" component={PostScreen}/>
+                <Tab.Screen name="Produtos" component={Produtos} />
+                <Tab.Screen name="Fornecedores" component={Fornecedores}/>
                 <Tab.Screen name="Ler API" component={APIScreen} />
             </Tab.Navigator>
         </NavigationContainer>
