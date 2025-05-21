@@ -4,7 +4,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import PostProdutos from "./PostProdutos";
-import PostSupplier from './PostSupplier'; 
+import PostSupplier from './PostSupplier';
+import CrudApi from './crudapi';
 
 function HomeScreen() {
     return (
@@ -32,11 +33,7 @@ function Fornecedores() {
 }
  
 function APIScreen() {
-    return (
-        <View style={styles.container}>
-            <Text></Text>
-        </View>
-    );
+   return <CrudApi/>
 }
  
 const Tab = createBottomTabNavigator();
