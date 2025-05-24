@@ -3,127 +3,134 @@ import { View, Text, TextInput, Button, FlatList, TouchableOpacity, StyleSheet }
 import axios from 'axios';
 import Icon from 'react-native-vector-icons/Feather'; // Ícones modernos
 
-const API_URL = 'https://682e52bd746f8ca4a47c99bc.mockapi.io/orders'; // Substitua com seu endpoint
+const API_URL = 'https://682e52db746f8ca4a47c9aab.mockapi.io/api/v1/users'; // Substitua com seu endpoint
 
 export default function CrudApi() {
-    const [Orders, setOrders] = useState([]);
-    const [customerId, setCustomerId] = useState('');
-    const [orderdate, setOrderdate] = useState('');
-    const [cardnumber, setCardnumber] = useState('');
-    const [customername, setCustomername] = useState('');
-    const [ordername, setOrdername] = useState('');
-    const [editingOrders, setEditingOrders] = useState(null);
+    const [users, setUsers] = useState([]);
+    const [name, setName] = useState('');
+    const [age, setAge] = useState('');
+    const [gender, setGender] = useState('');
+    const [address, setAddress] = useState('');
+    const [editingUser, setEditingUser] = useState(null);
+    const [image, setImage] = useState('');
 
     useEffect(() => {
-        searchOrders();
+        searchUsers();
     }, []);
 
-    const searchOrders = async () => {
+    const searchUsers = async () => {
         try {
             const response = await axios.get(API_URL);
-            setOrders(response.data);
+            setUsers(response.data);
         } catch (error) {
-            console.error('Erro ao buscar Pedidos', error);
-            alert('Nenhum pedido cadastrado');
+            console.error('Erro ao buscar usuários', error);
+            alert('Lista de Usuários vazia');
         }
     };
 
     const handleCreate = async () => {
         try {
-            const newOrders = { customerId, orderdate, cardnumber, customername, ordername };
-            await axios.post(API_URL, newOrders);
-            searchOrders();
-            setCustomerId('');
-            setOrderdate('');
-            setCardnumber('');
-            setCustomername('');
-            setOrdername('');
-            alert('Pedido Inserido com Sucesso!')
-            setEditingOrders('');
+            const newUser = { name, age, gender, address, image };
+            await axios.post(API_URL, newUser);
+            searchUsers();
+            alert('Usuário Inserido com Sucesso!')
+            clearFields();
         } catch (error) {
-            console.error('Erro ao criar Pedido', error);
+            console.error('Erro ao criar usuário', error);
         }
     };
 
     //carregar para exibir os dados nos TextInput
-    const handleLoad = (order) => {
-        setCustomerId(order.customerId);
-        setOrderdate(order.orderdate);
-        setCardnumber(order.cardnumber);
-        setCustomername(order.customername);
-        setOrdername(order.ordername);
-        setEditingOrders(order);
+    const handleLoad = (user) => {
+        setName(user.name);
+        setAge(user.age);
+        setGender(user.gender);
+        setAddress(user.address);
+        setEditingUser(user);
+        setImage(user.image);
     };
 
     const handleUpdate = async () => {
         try {
-            const updatedOrder = { customerId, orderdate, cardnumber, customername, ordername };
-            await axios.put(`${API_URL}/${editingOrder.id}`, updatedOrder);
-            searchOrders();
-            alert('Pedido Alterado com Sucesso!')
+            const updatedUser = { name, age, gender, address, image };
+            await axios.put(`${API_URL}/${editingUser.id}`, updatedUser);
+            searchUsers();
+            alert('Dados do Usuário Alterado com Sucesso!')
             clearFields();
-            setEditingOrders(null);
+            setEditingUser(null);
         } catch (error) {
-            console.error('Erro ao atualizar Pedido', error);
+            console.error('Erro ao atualizar usuário', error);
         }
     };
 
-    const handleDelete = async (Id) => {
+    const handleDelete = async (userId) => {
         try {
-            await axios.delete(`${API_URL}/${Id}`);
-            SearchOrders();
+            await axios.delete(`${API_URL}/${userId}`);
+            searchUsers();
         } catch (error) {
-            console.error('Erro ao deletar Pedido', error);
+            console.error('Erro ao deletar usuário', error);
         }
     };
+
+    function clearFields() {
+        setName('');
+        setAge('');
+        setGender('');
+        setAddress('');
+        setImage('');
+    }
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Cadastro de Pedidos</Text>
+            <Text style={styles.title}>Cadastro de Usuários</Text>
 
             <TextInput
-                value={ordername}
-                onChangeText={setOrdername}
-                placeholder="Nome do Pedido"
+                value={name}
+                onChangeText={setName}
+                placeholder="Usuário"
+                style={styles.input}
+            />
+            <TextInput
+                value={age}
+                onChangeText={setAge}
+                placeholder="Idade"
+                style={styles.input}
+            />
+            <TextInput
+                value={gender}
+                onChangeText={setGender}
+                placeholder="Gênero"
+                style={styles.input}
+            />
+            <TextInput
+                value={address}
+                onChangeText={setAddress}
+                placeholder="Endereço"
                 style={styles.input}
             />
 
             <TextInput
-                value={customername}
-                onChangeText={setCustomername}
-                placeholder="Nome do Cliente"
-                style={styles.input}
-            />
-            <TextInput
-                value={cardnumber}
-                onChangeText={setCardnumber}
-                placeholder="Cartão de Debito/Credito"
-                style={styles.input}
-            />
-            <TextInput
-                value={orderdate}
-                onChangeText={setOrderdate}
-                placeholder="Data do Pedido"
+                value={image}
+                onChangeText={setImage}
+                placeholder="URL da Imagem"
                 style={styles.input}
             />
 
             <Button
-                title={editingOrders ? 'Atualizar Pedido' : 'Adicionar Pedido'}
-                onPress={editingOrders ? handleUpdate : handleCreate}
+                title={editingUser ? 'Atualizar Usuário' : 'Adicionar Usuário'}
+                onPress={editingUser ? handleUpdate : handleCreate}
                 color="#007AFF"
             />
 
             <FlatList
-                data={Orders}
+                data={users}
                 keyExtractor={(item) => item.id.toString()}
                 style={{ marginTop: 20 }}
                 renderItem={({ item }) => (
                     <View style={styles.userItem}>
                         <View style={{ flex: 1 }}>
-                            <Text style={styles.ordername}>Nome: {item.ordername}</Text>
-                            <Text style={styles.customername}>Cliente: {item.customername}</Text>
-                            <Text style={styles.cardnumber}>Cliente: {item.cardnumber}</Text>
-                            <Text style={styles.orderdate}>Cliente: {item.orderdate}</Text>
+                            <Text style={styles.name}>Nome: {item.name}</Text>
+                            <Text style={styles.address}>Endereço: {item.address}</Text>
                         </View>
                         <TouchableOpacity onPress={() => handleLoad(item)} style={styles.iconButton}>
                             <Icon name="edit" size={20} color="#007AFF" />
@@ -168,11 +175,11 @@ const styles = StyleSheet.create({
         borderColor: '#e0e0e0',
         borderWidth: 1,
     },
-    userName: {
+    name: {
         fontSize: 16,
         fontWeight: 'bold',
     },
-    userEmail: {
+    address: {
         color: '#555',
     },
     iconButton: {
