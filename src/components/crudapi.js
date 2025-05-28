@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TextInput, Button, FlatList, TouchableOpacity, StyleSheet, Image, Alert, Platform } from 'react-native';
 import axios from 'axios';
 import Icon from 'react-native-vector-icons/Feather';
 
-const API_URL = 'https://682e52bd746f8ca4a47c99bc.mockapi.io/reviews'; // Endpoint para reviews
+const API_URL = 'https://682e52bd746f8ca4a47c99bc.mockapi.io/reviews';
 
 export default function CrudReviews() {
     const [reviews, setReviews] = useState([]);
@@ -12,28 +12,34 @@ export default function CrudReviews() {
     const [customerName, setCustomerName] = useState('');
     const [reviewDate, setReviewDate] = useState('');
     const [image, setImage] = useState('');
+    const [imageUri, setImageUri] = useState('');
     const [editingReview, setEditingReview] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
 
-    useEffect(() => {
-        searchReviews();
-        setCurrentDate();
-    }, []);
-
-    const setCurrentDate = () => {
+    // Usar useCallback para evitar re-renderizações desnecessárias
+    const setCurrentDate = useCallback(() => {
         const now = new Date();
         const formattedDate = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
         setReviewDate(formattedDate);
-    };
+    }, []);
 
-    const searchReviews = async () => {
+    const searchReviews = useCallback(async () => {
         try {
+            setIsLoading(true);
             const response = await axios.get(API_URL);
             setReviews(response.data);
         } catch (error) {
             console.error('Erro ao buscar reviews', error);
             showAlert('Erro', 'Lista de Reviews vazia ou erro na conexão');
+        } finally {
+            setIsLoading(false);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        searchReviews();
+        setCurrentDate();
+    }, [searchReviews, setCurrentDate]);
 
     const showAlert = (title, message) => {
         if (Platform.OS === 'web') {
@@ -43,12 +49,90 @@ export default function CrudReviews() {
         }
     };
 
+    // Função para converter imagem para base64 (para web)
+    const convertImageToBase64 = (file) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    };
+
+    // Função para selecionar imagem
+    const selectImage = async () => {
+        try {
+            if (Platform.OS === 'web') {
+                // Para web - usar input file
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+                input.onchange = async (event) => {
+                    const file = event.target.files[0];
+                    if (file) {
+                        try {
+                            // Validar tamanho do arquivo (máximo 5MB)
+                            if (file.size > 5 * 1024 * 1024) {
+                                showAlert('Erro', 'Imagem muito grande. Máximo 5MB.');
+                                return;
+                            }
+
+                            const base64 = await convertImageToBase64(file);
+                            setImage(base64);
+                            setImageUri(base64);
+                        } catch (error) {
+                            showAlert('Erro', 'Erro ao processar imagem');
+                        }
+                    }
+                };
+                input.click();
+            } else {
+                // Para React Native - usar react-native-image-picker (se disponível)
+                try {
+                    const { launchImageLibrary } = require('react-native-image-picker');
+
+                    const options = {
+                        mediaType: 'photo',
+                        includeBase64: true,
+                        maxHeight: 2000,
+                        maxWidth: 2000,
+                        quality: 0.8,
+                    };
+
+                    launchImageLibrary(options, (response) => {
+                        if (response.didCancel) {
+                            return;
+                        }
+
+                        if (response.errorMessage) {
+                            showAlert('Erro', response.errorMessage);
+                            return;
+                        }
+
+                        if (response.assets && response.assets[0]) {
+                            const asset = response.assets[0];
+                            const base64Image = `data:${asset.type};base64,${asset.base64}`;
+                            setImage(base64Image);
+                            setImageUri(asset.uri);
+                        }
+                    });
+                } catch (error) {
+                    // Se react-native-image-picker não estiver disponível
+                    showAlert('Aviso', 'Funcionalidade de seleção de imagem não disponível no mobile. Use a versão web ou instale react-native-image-picker.');
+                }
+            }
+        } catch (error) {
+            console.error('Erro ao selecionar imagem:', error);
+            showAlert('Erro', 'Erro ao selecionar imagem');
+        }
+    };
+
     const validateInputs = () => {
         if (!customerName.trim()) {
             showAlert('Erro de Validação', 'Nome do cliente é obrigatório');
             return false;
         }
-        
+
         if (customerName.trim().length < 2) {
             showAlert('Erro de Validação', 'Nome do cliente deve ter pelo menos 2 caracteres');
             return false;
@@ -70,64 +154,55 @@ export default function CrudReviews() {
         }
 
         if (!image.trim()) {
-            showAlert('Erro de Validação', 'URL da imagem é obrigatória');
-            return false;
-        }
-
-        // Validação básica de URL
-        const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
-        if (!urlPattern.test(image)) {
-            showAlert('Erro de Validação', 'URL da imagem inválida');
+            showAlert('Erro de Validação', 'Imagem é obrigatória');
             return false;
         }
 
         return true;
     };
 
-    const handleGradeChange = (text) => {
-        // Remove caracteres não numéricos e limita a 1 dígito
+    // Usar useCallback para evitar re-renderizações
+    const handleGradeChange = useCallback((text) => {
         const numericText = text.replace(/[^0-5]/g, '');
         if (numericText.length <= 1) {
             setGrade(numericText);
         }
-    };
+    }, []);
 
-    const handleCustomerNameChange = (text) => {
-        // Remove números e caracteres especiais, mantém apenas letras e espaços
+    const handleCustomerNameChange = useCallback((text) => {
         const cleanText = text.replace(/[^a-zA-ZÀ-ÿ\s]/g, '');
         if (cleanText.length <= 50) {
             setCustomerName(cleanText);
         }
-    };
+    }, []);
 
-    const handleCommentChange = (text) => {
+    const handleCommentChange = useCallback((text) => {
         if (text.length <= 500) {
             setComment(text);
         }
-    };
-
-    const handleImageChange = (text) => {
-        setImage(text.trim());
-    };
+    }, []);
 
     const handleCreate = async () => {
         if (!validateInputs()) return;
 
         try {
-            const newReview = { 
-                grade: parseInt(grade), 
-                comment: comment.trim(), 
-                customerName: customerName.trim(), 
-                reviewDate, 
-                image: image.trim() 
+            setIsLoading(true);
+            const newReview = {
+                grade: parseInt(grade),
+                comment: comment.trim(),
+                customerName: customerName.trim(),
+                reviewDate,
+                image: image.trim()
             };
             await axios.post(API_URL, newReview);
-            searchReviews();
+            await searchReviews();
             showAlert('Sucesso', 'Review inserida com sucesso!');
             clearFields();
         } catch (error) {
             console.error('Erro ao criar review', error);
             showAlert('Erro', 'Erro ao criar review');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -137,6 +212,7 @@ export default function CrudReviews() {
         setCustomerName(review.customerName);
         setReviewDate(review.reviewDate);
         setImage(review.image);
+        setImageUri(review.image);
         setEditingReview(review);
     };
 
@@ -144,35 +220,40 @@ export default function CrudReviews() {
         if (!validateInputs()) return;
 
         try {
-            const updatedReview = { 
-                grade: parseInt(grade), 
-                comment: comment.trim(), 
-                customerName: customerName.trim(), 
-                reviewDate, 
-                image: image.trim() 
+            setIsLoading(true);
+            const updatedReview = {
+                grade: parseInt(grade),
+                comment: comment.trim(),
+                customerName: customerName.trim(),
+                reviewDate,
+                image: image.trim()
             };
             await axios.put(`${API_URL}/${editingReview.id}`, updatedReview);
-            searchReviews();
+            await searchReviews();
             showAlert('Sucesso', 'Review atualizada com sucesso!');
             clearFields();
             setEditingReview(null);
         } catch (error) {
             console.error('Erro ao atualizar review', error);
             showAlert('Erro', 'Erro ao atualizar review');
+        } finally {
+            setIsLoading(false);
         }
     };
 
     const handleDelete = async (reviewId) => {
-        const confirmDelete = () => {
-            axios.delete(`${API_URL}/${reviewId}`)
-                .then(() => {
-                    searchReviews();
-                    showAlert('Sucesso', 'Review deletada com sucesso!');
-                })
-                .catch((error) => {
-                    console.error('Erro ao deletar review', error);
-                    showAlert('Erro', 'Erro ao deletar review');
-                });
+        const confirmDelete = async () => {
+            try {
+                setIsLoading(true);
+                await axios.delete(`${API_URL}/${reviewId}`);
+                await searchReviews();
+                showAlert('Sucesso', 'Review deletada com sucesso!');
+            } catch (error) {
+                console.error('Erro ao deletar review', error);
+                showAlert('Erro', 'Erro ao deletar review');
+            } finally {
+                setIsLoading(false);
+            }
         };
 
         if (Platform.OS === 'web') {
@@ -196,6 +277,7 @@ export default function CrudReviews() {
         setComment('');
         setCustomerName('');
         setImage('');
+        setImageUri('');
         setCurrentDate();
     };
 
@@ -214,101 +296,217 @@ export default function CrudReviews() {
     const formatDate = (dateString) => {
         return dateString || 'Data não disponível';
     };
+    const FormComponent = React.memo(() => (
+        <View style={styles.form}>
+            <View style={styles.row}>
+                <View style={styles.halfWidth}>
+                    <Text style={styles.label}>Nome do Cliente *</Text>
+                    <TextInput
+                        value={customerName}
+                        onChangeText={handleCustomerNameChange}
+                        placeholder="Nome do cliente"
+                        style={styles.input}
+                        maxLength={50}
+                    />
+                </View>
+                <View style={styles.halfWidth}>
+                    <Text style={styles.label}>Nota (0-5) *</Text>
+                    <TextInput
+                        value={grade}
+                        onChangeText={handleGradeChange}
+                        placeholder="0-5"
+                        style={styles.input}
+                        keyboardType="numeric"
+                        maxLength={1}
+                    />
+                </View>
+            </View>
+
+            <Text style={styles.label}>Comentário *</Text>
+            <TextInput
+                value={comment}
+                onChangeText={handleCommentChange}
+                placeholder="Digite seu comentário (mín. 10 caracteres)"
+                style={[styles.input, styles.textArea]}
+                multiline
+                numberOfLines={3}
+                textAlignVertical="top"
+                maxLength={500}
+            />
+            <Text style={styles.charCount}>{comment.length}/500</Text>
+
+            <View style={styles.row}>
+                <View style={styles.halfWidth}>
+                    <Text style={styles.label}>Data</Text>
+                    <TextInput
+                        value={reviewDate}
+                        style={[styles.input, styles.dateInput]}
+                        editable={false}
+                    />
+                </View>
+                <View style={styles.halfWidth}>
+                    <Text style={styles.label}>Imagem *</Text>
+                    <TouchableOpacity
+                        style={styles.imageButton}
+                        onPress={selectImage}
+                    >
+                        <Icon name="image" size={16} color="#007AFF" style={{ marginRight: 8 }} />
+                        <Text style={styles.imageButtonText}>
+                            {imageUri ? 'Alterar Imagem' : 'Selecionar Imagem'}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+
+            {imageUri ? (
+                <View style={styles.imagePreviewContainer}>
+                    <Text style={styles.label}>Preview da Imagem:</Text>
+                    <Image
+                        source={{ uri: imageUri }}
+                        style={styles.imagePreview}
+                        resizeMode="cover"
+                        onError={() => {
+                            showAlert('Erro', 'Erro ao carregar imagem');
+                            setImageUri('');
+                            setImage('');
+                        }}
+                    />
+                </View>
+            ) : null}
+
+            <TouchableOpacity
+                style={[styles.button, styles.primaryButton, isLoading && styles.disabledButton]}
+                onPress={editingReview ? handleUpdate : handleCreate}
+                disabled={isLoading}
+            >
+                <Text style={styles.buttonText}>
+                    {isLoading ? 'Processando...' : (editingReview ? 'Atualizar' : 'Adicionar')}
+                </Text>
+            </TouchableOpacity>
+
+            {editingReview && (
+                <TouchableOpacity
+                    style={[styles.button, styles.cancelButton]}
+                    onPress={() => {
+                        clearFields();
+                        setEditingReview(null);
+                    }}
+                >
+                    <Text style={[styles.buttonText, { color: '#666' }]}>
+                        Cancelar
+                    </Text>
+                </TouchableOpacity>
+            )}
+        </View>
+    ));
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Sistema de Reviews</Text>
-            
             <FlatList
                 data={reviews}
                 keyExtractor={(item) => item.id.toString()}
                 showsVerticalScrollIndicator={false}
                 ListHeaderComponent={() => (
-                    <View>
-                        <View style={styles.form}>
-                            <View style={styles.row}>
-                                <View style={styles.halfWidth}>
-                                    <Text style={styles.label}>Nome do Cliente *</Text>
-                                    <TextInput
-                                        value={customerName}
-                                        onChangeText={handleCustomerNameChange}
-                                        placeholder="Nome do cliente"
-                                        style={styles.input}
-                                        maxLength={50}
-                                    />
-                                </View>
-                                <View style={styles.halfWidth}>
-                                    <Text style={styles.label}>Nota (0-5) *</Text>
-                                    <TextInput
-                                        value={grade}
-                                        onChangeText={handleGradeChange}
-                                        placeholder="0-5"
-                                        style={styles.input}
-                                        keyboardType="numeric"
-                                        maxLength={1}
-                                    />
-                                </View>
+                    <View style={styles.form}>
+                        <View style={styles.row}>
+                            <View style={styles.halfWidth}>
+                                <Text style={styles.label}>Nome do Cliente *</Text>
+                                <TextInput
+                                    value={customerName}
+                                    onChangeText={handleCustomerNameChange}
+                                    placeholder="Nome do cliente"
+                                    style={styles.input}
+                                    maxLength={50}
+                                />
                             </View>
-
-                            <Text style={styles.label}>Comentário *</Text>
-                            <TextInput
-                                value={comment}
-                                onChangeText={handleCommentChange}
-                                placeholder="Digite seu comentário (mín. 10 caracteres)"
-                                style={[styles.input, styles.textArea]}
-                                multiline
-                                numberOfLines={3}
-                                textAlignVertical="top"
-                                maxLength={500}
-                            />
-                            <Text style={styles.charCount}>{comment.length}/500</Text>
-
-                            <View style={styles.row}>
-                                <View style={styles.halfWidth}>
-                                    <Text style={styles.label}>Data</Text>
-                                    <TextInput
-                                        value={reviewDate}
-                                        style={[styles.input, styles.dateInput]}
-                                        editable={false}
-                                    />
-                                </View>
-                                <View style={styles.halfWidth}>
-                                    <Text style={styles.label}>URL Imagem *</Text>
-                                    <TextInput
-                                        value={image}
-                                        onChangeText={handleImageChange}
-                                        placeholder="URL da imagem"
-                                        style={styles.input}
-                                        keyboardType="url"
-                                    />
-                                </View>
+                            <View style={styles.halfWidth}>
+                                <Text style={styles.label}>Nota (0-5) *</Text>
+                                <TextInput
+                                    value={grade}
+                                    onChangeText={handleGradeChange}
+                                    placeholder="0-5"
+                                    style={styles.input}
+                                    keyboardType="numeric"
+                                    maxLength={1}
+                                />
                             </View>
-
-                            <TouchableOpacity
-                                style={[styles.button, styles.primaryButton]}
-                                onPress={editingReview ? handleUpdate : handleCreate}
-                            >
-                                <Text style={styles.buttonText}>
-                                    {editingReview ? 'Atualizar' : 'Adicionar'}
-                                </Text>
-                            </TouchableOpacity>
-
-                            {editingReview && (
-                                <TouchableOpacity
-                                    style={[styles.button, styles.cancelButton]}
-                                    onPress={() => {
-                                        clearFields();
-                                        setEditingReview(null);
-                                    }}
-                                >
-                                    <Text style={[styles.buttonText, { color: '#666' }]}>
-                                        Cancelar
-                                    </Text>
-                                </TouchableOpacity>
-                            )}
                         </View>
 
-                        <Text style={styles.listTitle}>Reviews Cadastradas ({reviews.length})</Text>
+                        <Text style={styles.label}>Comentário *</Text>
+                        <TextInput
+                            value={comment}
+                            onChangeText={handleCommentChange}
+                            placeholder="Digite seu comentário (mín. 10 caracteres)"
+                            style={[styles.input, styles.textArea]}
+                            multiline
+                            numberOfLines={3}
+                            textAlignVertical="top"
+                            maxLength={500}
+                        />
+                        <Text style={styles.charCount}>{comment.length}/500</Text>
+
+                        <View style={styles.row}>
+                            <View style={styles.halfWidth}>
+                                <Text style={styles.label}>Data</Text>
+                                <TextInput
+                                    value={reviewDate}
+                                    style={[styles.input, styles.dateInput]}
+                                    editable={false}
+                                />
+                            </View>
+                            <View style={styles.halfWidth}>
+                                <Text style={styles.label}>Imagem *</Text>
+                                <TouchableOpacity
+                                    style={styles.imageButton}
+                                    onPress={selectImage}
+                                >
+                                    <Icon name="image" size={16} color="#007AFF" style={{ marginRight: 8 }} />
+                                    <Text style={styles.imageButtonText}>
+                                        {imageUri ? 'Alterar Imagem' : 'Selecionar Imagem'}
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+
+                        {imageUri ? (
+                            <View style={styles.imagePreviewContainer}>
+                                <Text style={styles.label}>Preview da Imagem:</Text>
+                                <Image
+                                    source={{ uri: imageUri }}
+                                    style={styles.imagePreview}
+                                    resizeMode="cover"
+                                    onError={() => {
+                                        showAlert('Erro', 'Erro ao carregar imagem');
+                                        setImageUri('');
+                                        setImage('');
+                                    }}
+                                />
+                            </View>
+                        ) : null}
+
+                        <TouchableOpacity
+                            style={[styles.button, styles.primaryButton, isLoading && styles.disabledButton]}
+                            onPress={editingReview ? handleUpdate : handleCreate}
+                            disabled={isLoading}
+                        >
+                            <Text style={styles.buttonText}>
+                                {isLoading ? 'Processando...' : (editingReview ? 'Atualizar' : 'Adicionar')}
+                            </Text>
+                        </TouchableOpacity>
+
+                        {editingReview && (
+                            <TouchableOpacity
+                                style={[styles.button, styles.cancelButton]}
+                                onPress={() => {
+                                    clearFields();
+                                    setEditingReview(null);
+                                }}
+                            >
+                                <Text style={[styles.buttonText, { color: '#666' }]}>
+                                    Cancelar
+                                </Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
                 )}
                 renderItem={({ item }) => (
@@ -319,14 +517,14 @@ export default function CrudReviews() {
                                 <Text style={styles.reviewDate}>{formatDate(item.reviewDate)}</Text>
                             </View>
                             <View style={styles.actions}>
-                                <TouchableOpacity 
-                                    onPress={() => handleLoad(item)} 
+                                <TouchableOpacity
+                                    onPress={() => handleLoad(item)}
                                     style={[styles.actionButton, styles.editButton]}
                                 >
                                     <Icon name="edit" size={16} color="#007AFF" />
                                 </TouchableOpacity>
-                                <TouchableOpacity 
-                                    onPress={() => handleDelete(item.id)} 
+                                <TouchableOpacity
+                                    onPress={() => handleDelete(item.id)}
                                     style={[styles.actionButton, styles.deleteButton]}
                                 >
                                     <Icon name="trash-2" size={16} color="#FF3B30" />
@@ -345,10 +543,11 @@ export default function CrudReviews() {
 
                         {item.image && (
                             <View style={styles.imageContainer}>
-                                <Image 
-                                    source={{ uri: item.image }} 
+                                <Image
+                                    source={{ uri: item.image }}
                                     style={styles.productImage}
                                     resizeMode="cover"
+                                    onError={() => console.log('Erro ao carregar imagem da review')}
                                 />
                             </View>
                         )}
@@ -372,13 +571,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#f8f9fa',
         paddingHorizontal: 16,
         paddingTop: 50,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#2c3e50',
-        textAlign: 'center',
-        marginBottom: 20,
     },
     scrollContent: {
         flexGrow: 1,
@@ -431,6 +623,32 @@ const styles = StyleSheet.create({
         textAlign: 'right',
         marginTop: 2,
     },
+    imageButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: '#007AFF',
+        borderStyle: 'dashed',
+        padding: 10,
+        borderRadius: 8,
+        backgroundColor: '#f8f9ff',
+    },
+    imageButtonText: {
+        color: '#007AFF',
+        fontSize: 14,
+        fontWeight: '500',
+    },
+    imagePreviewContainer: {
+        marginTop: 12,
+        alignItems: 'center',
+    },
+    imagePreview: {
+        width: 100,
+        height: 100,
+        borderRadius: 8,
+        marginTop: 8,
+    },
     button: {
         padding: 12,
         borderRadius: 8,
@@ -445,6 +663,9 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#ddd',
         marginTop: 8,
+    },
+    disabledButton: {
+        backgroundColor: '#cccccc',
     },
     buttonText: {
         color: '#fff',

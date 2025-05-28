@@ -58,8 +58,8 @@ export default function Menu() {
                             case 'Fornecedores':
                                 iconName = 'group';
                                 break;
-                            case 'Ler API':
-                                iconName = 'android';
+                            case 'Reviews':
+                                iconName = 'thumbs-up';
                                 break;
                             default:
                                 iconName = 'bomb';
@@ -76,7 +76,7 @@ export default function Menu() {
                 <Tab.Screen name="Listar" component={ListScreen} />
                 <Tab.Screen name="Produtos" component={Produtos} />
                 <Tab.Screen name="Fornecedores" component={Fornecedores}/>
-                <Tab.Screen name="Ler API" component={APIScreen} />
+                <Tab.Screen name="Reviews" component={APIScreen} />
             </Tab.Navigator>
         </NavigationContainer>
     );

@@ -4432,6 +4432,11 @@ react-is@^16.7.0:
 react-is@^18.0.0, react-is@^18.2.0:
   version "18.3.1"
 
+react-native-image-picker@^8.2.1:
+  version "8.2.1"
+  resolved "https://registry.npmjs.org/react-native-image-picker/-/react-native-image-picker-8.2.1.tgz"
+  integrity sha512-FBeGYJGFDjMdGCcyubDJgBAPCQ4L1D3hwLXyUU91jY9ahOZMTbluceVvRmrEKqnDPFJ0gF1NVhJ0nr1nROFLdg==
+
 react-native-paper@^5.13.1:
   version "5.13.1"
   resolved "https://registry.npmjs.org/react-native-paper/-/react-native-paper-5.13.1.tgz"
