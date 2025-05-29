@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, FlatList, TouchableOpacity, StyleSheet, Image, Alert, Platform } from 'react-native';
 import axios from 'axios';
 import Icon from 'react-native-vector-icons/Feather';
@@ -16,14 +16,13 @@ export default function CrudReviews() {
     const [editingReview, setEditingReview] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
 
-    // Usar useCallback para evitar re-renderizações desnecessárias
-    const setCurrentDate = useCallback(() => {
+    const setCurrentDate = () => {
         const now = new Date();
         const formattedDate = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
         setReviewDate(formattedDate);
-    }, []);
+    };
 
-    const searchReviews = useCallback(async () => {
+    const searchReviews = async () => {
         try {
             setIsLoading(true);
             const response = await axios.get(API_URL);
@@ -34,12 +33,12 @@ export default function CrudReviews() {
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    };
 
     useEffect(() => {
         searchReviews();
         setCurrentDate();
-    }, [searchReviews, setCurrentDate]);
+    }, []);
 
     const showAlert = (title, message) => {
         if (Platform.OS === 'web') {
@@ -49,7 +48,6 @@ export default function CrudReviews() {
         }
     };
 
-    // Função para converter imagem para base64 (para web)
     const convertImageToBase64 = (file) => {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -59,11 +57,9 @@ export default function CrudReviews() {
         });
     };
 
-    // Função para selecionar imagem
     const selectImage = async () => {
         try {
             if (Platform.OS === 'web') {
-                // Para web - usar input file
                 const input = document.createElement('input');
                 input.type = 'file';
                 input.accept = 'image/*';
@@ -71,7 +67,6 @@ export default function CrudReviews() {
                     const file = event.target.files[0];
                     if (file) {
                         try {
-                            // Validar tamanho do arquivo (máximo 5MB)
                             if (file.size > 5 * 1024 * 1024) {
                                 showAlert('Erro', 'Imagem muito grande. Máximo 5MB.');
                                 return;
@@ -87,7 +82,6 @@ export default function CrudReviews() {
                 };
                 input.click();
             } else {
-                // Para React Native - usar react-native-image-picker (se disponível)
                 try {
                     const { launchImageLibrary } = require('react-native-image-picker');
 
@@ -117,7 +111,6 @@ export default function CrudReviews() {
                         }
                     });
                 } catch (error) {
-                    // Se react-native-image-picker não estiver disponível
                     showAlert('Aviso', 'Funcionalidade de seleção de imagem não disponível no mobile. Use a versão web ou instale react-native-image-picker.');
                 }
             }
@@ -161,26 +154,25 @@ export default function CrudReviews() {
         return true;
     };
 
-    // Usar useCallback para evitar re-renderizações
-    const handleGradeChange = useCallback((text) => {
+    const handleGradeChange = (text) => {
         const numericText = text.replace(/[^0-5]/g, '');
         if (numericText.length <= 1) {
             setGrade(numericText);
         }
-    }, []);
+    };
 
-    const handleCustomerNameChange = useCallback((text) => {
+    const handleCustomerNameChange = (text) => {
         const cleanText = text.replace(/[^a-zA-ZÀ-ÿ\s]/g, '');
         if (cleanText.length <= 50) {
             setCustomerName(cleanText);
         }
-    }, []);
+    };
 
-    const handleCommentChange = useCallback((text) => {
+    const handleCommentChange = (text) => {
         if (text.length <= 500) {
             setComment(text);
         }
-    }, []);
+    };
 
     const handleCreate = async () => {
         if (!validateInputs()) return;
@@ -296,219 +288,117 @@ export default function CrudReviews() {
     const formatDate = (dateString) => {
         return dateString || 'Data não disponível';
     };
-    const FormComponent = React.memo(() => (
-        <View style={styles.form}>
-            <View style={styles.row}>
-                <View style={styles.halfWidth}>
-                    <Text style={styles.label}>Nome do Cliente *</Text>
-                    <TextInput
-                        value={customerName}
-                        onChangeText={handleCustomerNameChange}
-                        placeholder="Nome do cliente"
-                        style={styles.input}
-                        maxLength={50}
-                    />
-                </View>
-                <View style={styles.halfWidth}>
-                    <Text style={styles.label}>Nota (0-5) *</Text>
-                    <TextInput
-                        value={grade}
-                        onChangeText={handleGradeChange}
-                        placeholder="0-5"
-                        style={styles.input}
-                        keyboardType="numeric"
-                        maxLength={1}
-                    />
-                </View>
-            </View>
-
-            <Text style={styles.label}>Comentário *</Text>
-            <TextInput
-                value={comment}
-                onChangeText={handleCommentChange}
-                placeholder="Digite seu comentário (mín. 10 caracteres)"
-                style={[styles.input, styles.textArea]}
-                multiline
-                numberOfLines={3}
-                textAlignVertical="top"
-                maxLength={500}
-            />
-            <Text style={styles.charCount}>{comment.length}/500</Text>
-
-            <View style={styles.row}>
-                <View style={styles.halfWidth}>
-                    <Text style={styles.label}>Data</Text>
-                    <TextInput
-                        value={reviewDate}
-                        style={[styles.input, styles.dateInput]}
-                        editable={false}
-                    />
-                </View>
-                <View style={styles.halfWidth}>
-                    <Text style={styles.label}>Imagem *</Text>
-                    <TouchableOpacity
-                        style={styles.imageButton}
-                        onPress={selectImage}
-                    >
-                        <Icon name="image" size={16} color="#007AFF" style={{ marginRight: 8 }} />
-                        <Text style={styles.imageButtonText}>
-                            {imageUri ? 'Alterar Imagem' : 'Selecionar Imagem'}
-                        </Text>
-                    </TouchableOpacity>
-                </View>
-            </View>
-
-            {imageUri ? (
-                <View style={styles.imagePreviewContainer}>
-                    <Text style={styles.label}>Preview da Imagem:</Text>
-                    <Image
-                        source={{ uri: imageUri }}
-                        style={styles.imagePreview}
-                        resizeMode="cover"
-                        onError={() => {
-                            showAlert('Erro', 'Erro ao carregar imagem');
-                            setImageUri('');
-                            setImage('');
-                        }}
-                    />
-                </View>
-            ) : null}
-
-            <TouchableOpacity
-                style={[styles.button, styles.primaryButton, isLoading && styles.disabledButton]}
-                onPress={editingReview ? handleUpdate : handleCreate}
-                disabled={isLoading}
-            >
-                <Text style={styles.buttonText}>
-                    {isLoading ? 'Processando...' : (editingReview ? 'Atualizar' : 'Adicionar')}
-                </Text>
-            </TouchableOpacity>
-
-            {editingReview && (
-                <TouchableOpacity
-                    style={[styles.button, styles.cancelButton]}
-                    onPress={() => {
-                        clearFields();
-                        setEditingReview(null);
-                    }}
-                >
-                    <Text style={[styles.buttonText, { color: '#666' }]}>
-                        Cancelar
-                    </Text>
-                </TouchableOpacity>
-            )}
-        </View>
-    ));
 
     return (
         <View style={styles.container}>
-            <FlatList
-                data={reviews}
-                keyExtractor={(item) => item.id.toString()}
-                showsVerticalScrollIndicator={false}
-                ListHeaderComponent={() => (
-                    <View style={styles.form}>
-                        <View style={styles.row}>
-                            <View style={styles.halfWidth}>
-                                <Text style={styles.label}>Nome do Cliente *</Text>
-                                <TextInput
-                                    value={customerName}
-                                    onChangeText={handleCustomerNameChange}
-                                    placeholder="Nome do cliente"
-                                    style={styles.input}
-                                    maxLength={50}
-                                />
-                            </View>
-                            <View style={styles.halfWidth}>
-                                <Text style={styles.label}>Nota (0-5) *</Text>
-                                <TextInput
-                                    value={grade}
-                                    onChangeText={handleGradeChange}
-                                    placeholder="0-5"
-                                    style={styles.input}
-                                    keyboardType="numeric"
-                                    maxLength={1}
-                                />
-                            </View>
-                        </View>
-
-                        <Text style={styles.label}>Comentário *</Text>
+            {/* Formulário */}
+            <View style={styles.form}>
+                <View style={styles.row}>
+                    <View style={styles.halfWidth}>
+                        <Text style={styles.label}>Nome do Cliente *</Text>
                         <TextInput
-                            value={comment}
-                            onChangeText={handleCommentChange}
-                            placeholder="Digite seu comentário (mín. 10 caracteres)"
-                            style={[styles.input, styles.textArea]}
-                            multiline
-                            numberOfLines={3}
-                            textAlignVertical="top"
-                            maxLength={500}
+                            value={customerName}
+                            onChangeText={handleCustomerNameChange}
+                            placeholder="Nome do cliente"
+                            style={styles.input}
+                            maxLength={50}
                         />
-                        <Text style={styles.charCount}>{comment.length}/500</Text>
+                    </View>
+                    <View style={styles.halfWidth}>
+                        <Text style={styles.label}>Nota (0-5) *</Text>
+                        <TextInput
+                            value={grade}
+                            onChangeText={handleGradeChange}
+                            placeholder="0-5"
+                            style={styles.input}
+                            keyboardType="numeric"
+                            maxLength={1}
+                        />
+                    </View>
+                </View>
 
-                        <View style={styles.row}>
-                            <View style={styles.halfWidth}>
-                                <Text style={styles.label}>Data</Text>
-                                <TextInput
-                                    value={reviewDate}
-                                    style={[styles.input, styles.dateInput]}
-                                    editable={false}
-                                />
-                            </View>
-                            <View style={styles.halfWidth}>
-                                <Text style={styles.label}>Imagem *</Text>
-                                <TouchableOpacity
-                                    style={styles.imageButton}
-                                    onPress={selectImage}
-                                >
-                                    <Icon name="image" size={16} color="#007AFF" style={{ marginRight: 8 }} />
-                                    <Text style={styles.imageButtonText}>
-                                        {imageUri ? 'Alterar Imagem' : 'Selecionar Imagem'}
-                                    </Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
+                <Text style={styles.label}>Comentário *</Text>
+                <TextInput
+                    value={comment}
+                    onChangeText={handleCommentChange}
+                    placeholder="Digite seu comentário (mín. 10 caracteres)"
+                    style={[styles.input, styles.textArea]}
+                    multiline
+                    numberOfLines={3}
+                    textAlignVertical="top"
+                    maxLength={500}
+                />
+                <Text style={styles.charCount}>{comment.length}/500</Text>
 
-                        {imageUri ? (
-                            <View style={styles.imagePreviewContainer}>
-                                <Text style={styles.label}>Preview da Imagem:</Text>
-                                <Image
-                                    source={{ uri: imageUri }}
-                                    style={styles.imagePreview}
-                                    resizeMode="cover"
-                                    onError={() => {
-                                        showAlert('Erro', 'Erro ao carregar imagem');
-                                        setImageUri('');
-                                        setImage('');
-                                    }}
-                                />
-                            </View>
-                        ) : null}
-
+                <View style={styles.row}>
+                    <View style={styles.halfWidth}>
+                        <Text style={styles.label}>Data</Text>
+                        <TextInput
+                            value={reviewDate}
+                            style={[styles.input, styles.dateInput]}
+                            editable={false}
+                        />
+                    </View>
+                    <View style={styles.halfWidth}>
+                        <Text style={styles.label}>Imagem *</Text>
                         <TouchableOpacity
-                            style={[styles.button, styles.primaryButton, isLoading && styles.disabledButton]}
-                            onPress={editingReview ? handleUpdate : handleCreate}
-                            disabled={isLoading}
+                            style={styles.imageButton}
+                            onPress={selectImage}
                         >
-                            <Text style={styles.buttonText}>
-                                {isLoading ? 'Processando...' : (editingReview ? 'Atualizar' : 'Adicionar')}
+                            <Icon name="image" size={16} color="#007AFF" style={{ marginRight: 8 }} />
+                            <Text style={styles.imageButtonText}>
+                                {imageUri ? 'Alterar Imagem' : 'Selecionar Imagem'}
                             </Text>
                         </TouchableOpacity>
-
-                        {editingReview && (
-                            <TouchableOpacity
-                                style={[styles.button, styles.cancelButton]}
-                                onPress={() => {
-                                    clearFields();
-                                    setEditingReview(null);
-                                }}
-                            >
-                                <Text style={[styles.buttonText, { color: '#666' }]}>
-                                    Cancelar
-                                </Text>
-                            </TouchableOpacity>
-                        )}
                     </View>
+                </View>
+
+                {imageUri ? (
+                    <View style={styles.imagePreviewContainer}>
+                        <Text style={styles.label}>Preview da Imagem:</Text>
+                        <Image
+                            source={{ uri: imageUri }}
+                            style={styles.imagePreview}
+                            resizeMode="contain"
+                            onError={() => {
+                                showAlert('Erro', 'Erro ao carregar imagem');
+                                setImageUri('');
+                                setImage('');
+                            }}
+                        />
+                    </View>
+                ) : null}
+
+                <TouchableOpacity
+                    style={[styles.button, styles.primaryButton, isLoading && styles.disabledButton]}
+                    onPress={editingReview ? handleUpdate : handleCreate}
+                    disabled={isLoading}
+                >
+                    <Text style={styles.buttonText}>
+                        {isLoading ? 'Processando...' : (editingReview ? 'Atualizar' : 'Adicionar')}
+                    </Text>
+                </TouchableOpacity>
+
+                {editingReview && (
+                    <TouchableOpacity
+                        style={[styles.button, styles.cancelButton]}
+                        onPress={() => {
+                            clearFields();
+                            setEditingReview(null);
+                        }}
+                    >
+                        <Text style={[styles.buttonText, { color: '#666' }]}>
+                            Cancelar
+                        </Text>
+                    </TouchableOpacity>
                 )}
+            </View>
+
+            {/* Lista de Reviews */}
+            <FlatList
+                data={reviews}
+                keyExtractor={(item) => item.id ? item.id.toString() : Math.random().toString()}
+                showsVerticalScrollIndicator={false}
                 renderItem={({ item }) => (
                     <View style={styles.reviewCard}>
                         <View style={styles.reviewHeader}>
@@ -546,7 +436,7 @@ export default function CrudReviews() {
                                 <Image
                                     source={{ uri: item.image }}
                                     style={styles.productImage}
-                                    resizeMode="cover"
+                                    resizeMode="contain"
                                     onError={() => console.log('Erro ao carregar imagem da review')}
                                 />
                             </View>
@@ -644,10 +534,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     imagePreview: {
-        width: 100,
-        height: 100,
+        width: 120,
+        height: 120,
         borderRadius: 8,
         marginTop: 8,
+        backgroundColor: '#f0f0f0',
     },
     button: {
         padding: 12,
@@ -671,13 +562,6 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 15,
         fontWeight: '600',
-    },
-    listTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#2c3e50',
-        marginBottom: 12,
-        marginTop: 8,
     },
     reviewCard: {
         backgroundColor: '#fff',
@@ -750,12 +634,15 @@ const styles = StyleSheet.create({
     imageContainer: {
         alignItems: 'center',
         marginTop: 8,
+        backgroundColor: '#f8f9fa',
+        borderRadius: 8,
+        padding: 8,
     },
     productImage: {
         width: '100%',
-        height: 150,
+        height: 200,
         borderRadius: 8,
-        backgroundColor: '#f0f0f0',
+        backgroundColor: '#fff',
     },
     emptyContainer: {
         alignItems: 'center',
