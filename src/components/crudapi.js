@@ -547,7 +547,7 @@ const styles = StyleSheet.create({
         marginTop: 12,
     },
     primaryButton: {
-        backgroundColor: '#007AFF',
+        backgroundColor: '#000000',
     },
     cancelButton: {
         backgroundColor: '#f8f9fa',
